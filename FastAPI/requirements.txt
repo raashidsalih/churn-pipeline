@@ -1,0 +1,5 @@
+FLAML==1.2.4
+pandas==1.5.3
+Requests==2.31.0
+catboost==1.2.0
+sdv==1.2.1
