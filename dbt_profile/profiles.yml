@@ -1,0 +1,13 @@
+dbt_project:
+  outputs:
+
+    dev:
+      type: postgres
+      host: pg
+      port: 5432
+      user: pguser
+      pass: pgpassword
+      dbname: pgdb
+      schema: churn
+
+  target: dev

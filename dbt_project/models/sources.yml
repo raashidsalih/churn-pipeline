@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: churn
+    database: pgdb
+    schema: churn
+    tables:
+      - name: customers
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
+      - name: synthesized
+        columns:
+          - name: id
+            tests:
+              - relationships:
+                  to: ref('customers')
+                  field: id
+
+      - name: classified
+        columns:
+          - name: id
+            tests:
+              - relationships:
+                  to: ref('customers')
+                  field: id
