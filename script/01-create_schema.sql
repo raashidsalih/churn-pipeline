@@ -1,0 +1,2 @@
+DROP SCHEMA IF EXISTS churn;
+CREATE SCHEMA churn;
