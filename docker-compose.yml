@@ -290,7 +290,7 @@ services:
     ports:
       - "4000:80"
     volumes:
-      - ./pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin_data:/var/lib/pgadmin
 
   dashboard:
     image: metabase/metabase
@@ -314,7 +314,7 @@ services:
 volumes:
   postgres-db-volume:
   pg_data:
-  pgadmin-data:
+  pgadmin_data:
   dbt_profile:
   dbt_project:
   metabase:
