@@ -27,7 +27,7 @@ def _gen_ulid(ti):
 
 
 with DAG("extract_load", start_date=datetime(2023, 7, 23),
-    schedule_interval="*/1 * * * *", catchup=False) as dag:
+    schedule_interval="0 * * * *", catchup=False) as dag:
 
         extract_synthetic = PythonOperator(
             task_id="extract_synthetic",
