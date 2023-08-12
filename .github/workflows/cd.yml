@@ -14,5 +14,5 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.KEY }}
           script: |
-            cd /home/admin/
+            cd /home/admin/churn-pipeline
             git pull https://github.com/raashidsalih/churn-pipeline.git
