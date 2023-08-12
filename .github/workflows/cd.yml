@@ -4,10 +4,10 @@ on:
     branches:
       - main
 jobs:
-  deploy-to-ec2:
+  deploy-to-server:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to server
+      - name: deploy to server
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
