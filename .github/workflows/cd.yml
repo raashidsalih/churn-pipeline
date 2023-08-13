@@ -16,3 +16,6 @@ jobs:
           script: |
             cd /home/admin/churn-pipeline
             sudo git pull --rebase https://github.com/raashidsalih/churn-pipeline.git
+            cd /home/admin
+            sudo chmod -R u=rwx,g=rwx,o=rwx churn-pipeline/
+            
