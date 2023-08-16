@@ -10,22 +10,22 @@ terraform {
 }
 
 provider "google" {
-  credentials = file("customer-churn-pipeline-5f468f8118ff.json")
+  credentials = file("cred.json")
 
   project = "customer-churn-pipeline"
-  region  = "us-central1"
-  zone    = "us-central1-c"
+  region  = var.gcp_region
+  zone    = var.gcp_zone
 }
 
 resource "google_compute_instance" "runner-instance" {
   name                    = "runner-instance"
-  machine_type            = "e2-standard-2"
-  zone                    = "us-central1-a"
-  tags = ["runner-instance"]
+  machine_type            = var.instance_type
+  zone                    = var.instance_zone
+  tags                    = ["runner-instance"]
   metadata_startup_script = file("setup.sh")
 
   metadata = {
-    ssh-keys = "admin:${file("ssh-key.pub")}"
+    ssh-keys = "ssh:${file("ssh.pub")}"
   }
 
   # Specify the boot disk image
@@ -56,7 +56,7 @@ resource "google_compute_firewall" "ssh-rule" {
 
   source_ranges = ["0.0.0.0/0"]
 
-  target_tags   = ["runner-instance"]
+  target_tags = ["runner-instance"]
 }
 
 resource "google_compute_firewall" "docker-firewall" {
