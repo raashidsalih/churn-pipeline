@@ -1,7 +1,9 @@
--- insert into customers table
+-- Insert into customers table
+-- Use Jinja templating to get the synthetic data and uuid from xcom
 {% set data = ti.xcom_pull(key="syn_data", task_ids="extract_synthetic") %}
 {% set uuid = ti.xcom_pull(key="ulid", task_ids="gen_ulid") %}
 
+-- Use the data and uuid to insert a new row into the churn.customers table
 INSERT INTO churn.customers
 VALUES
 ('{{uuid}}', 
