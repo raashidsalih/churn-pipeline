@@ -42,8 +42,8 @@ If you want to run the pipeline on your own, here are some considerations:
  - The Docker Compose file is the crux of this project, so that is a good starting point.
  - Rename sample.env to .env
  - Double check the ports for the various docker services if project is run locally. Ensure it doesn't conflict with ports used by other services on the system.
- - Add path to credentials file and locally generated SSH files in Terraform main file (main.tf).
- - Replace variables in variables.tf to your liking.
+ - Add path to credentials file and locally generated SSH files in the [Terraform main file (main.tf)](https://github.com/raashidsalih/churn-pipeline/blob/main/terraform/main.tf).
+ - Replace variables in [variables.tf](https://github.com/raashidsalih/churn-pipeline/blob/main/terraform/variables.tf) to your liking.
  - If CD implementation is going to be used, make changes to the output filepath (if necessary), and add necessary GitHub secrets.
  - Beware of port forwarding if Terraform is being used to create the VM that the project runs on. If the instance external IP address is known, anyone can gain access to the running Docker containers.
 
