@@ -19,7 +19,7 @@ For this project, the Telco Customer Churn data module which is a sample dataset
 
 The dataset is then used to train two models. The first is a Gaussian Copula Synthesizer to produce synthetic data with characteristics similar to the original. This is done since there is not much data to go around and serves as a rudimentary imitation of data entering the database, The second is an LGBModel which is a product of using FLAML's AutoML implementation on the data, and its purpose is to predict churn status for a particular user.
 
-Both models are hosted via FastAPI and are accessed this way. Airflow is then used to orchestrate the pulling of data from the Synthesizer, obtaining churn status prediction for said data from the classification model, generating a ULID for each user, and writing it all to a Postgres database. Airflow is also used to trigger dbt afterward to run tests and apply necessary transformations. The data is modeled after the star schema and is finally visualized as a dashboard using Metabase.
+Both models are hosted via FastAPI and are accessed this way. Airflow is then used to orchestrate the pulling of data from the Synthesizer, obtaining churn status prediction for said data from the classification model, generating a ULID for each customer, and writing it all to a Postgres database. Airflow is also used to trigger dbt afterward to run tests and apply necessary transformations. The data is modeled after the star schema and is finally visualized as a dashboard using Metabase.
 
 ![Data Model Diagram](https://raw.githubusercontent.com/raashidsalih/churn-pipeline/main/assets/star.svg)
 
