@@ -97,6 +97,7 @@ If you want to run the pipeline on your own, here are some considerations:
 ## 2. FastAPI
  - Data synthesis and prediction models handled via one server.
  - This is done to reduce overhead in setting up and maintaining multiple servers for services.
+ - Serves as an example of both serving a model for inference, and pulling from a model for synthetic data.
 
 ## 3. Postgres and pgAdmin
 -   Schema and tables created on startup.
