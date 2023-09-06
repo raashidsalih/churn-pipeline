@@ -15,6 +15,7 @@ This project was developed to:
 ## Project Architecture
 
 ![Architecture Diagram](https://raw.githubusercontent.com/raashidsalih/churn-pipeline/main/assets/architecture.svg)
+
 For this project, the Telco Customer Churn data module which is a sample dataset on IBM's Cognos Analytics platform is used. This seemed like the best representative considering the difficulty in finding a decent dataset for the use case.
 
 The dataset is then used to train two models. The first is a Gaussian Copula Synthesizer to produce synthetic data with characteristics similar to the original. This is done since there is not much data to go around and serves as a rudimentary imitation of data entering the database, The second is an LGBModel which is a product of using FLAML's AutoML implementation on the data, and its purpose is to predict churn status for a particular user.
