@@ -1,3 +1,5 @@
+# ruff: noqa: F401
+
 # Import the required modules
 from airflow import DAG
 from airflow.operators.python import PythonOperator
