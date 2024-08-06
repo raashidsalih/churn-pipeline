@@ -1,3 +1,5 @@
+# ruff: noqa: F401
+
 import pickle
 import pandas as pd
 from pathlib import Path
