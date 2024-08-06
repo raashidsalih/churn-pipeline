@@ -1,3 +1,5 @@
+# ruff: noqa: F401
+
 # Import the required modules
 import os
 from airflow import DAG
