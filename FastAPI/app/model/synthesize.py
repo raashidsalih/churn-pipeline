@@ -1,3 +1,5 @@
+# ruff: noqa: F401
+
 import pickle
 from pathlib import Path
 from sdv.single_table import GaussianCopulaSynthesizer
