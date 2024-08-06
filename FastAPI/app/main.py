@@ -1,12 +1,16 @@
+# ruff: noqa: F401
+
 from fastapi import FastAPI
 from fastapi import Response
 from pydantic import BaseModel
 import json
+import pandas as pd
 from app.model.synthesize import synthesize
 from app.model.synthesize import __version__ as syn_model_version
 from app.model.classify import classify
 from app.model.classify import __version__ as cls_model_version
 from datetime import datetime
+import uvicorn
 
 app = FastAPI()
 
