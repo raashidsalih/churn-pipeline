@@ -56,7 +56,11 @@ class ResponseModel(BaseModel):
 
 @app.get("/")
 def home():
-    return {"health_check": "OK", "syn_model_version": syn_model_version, "cls_model_version": cls_model_version}
+    return {
+        "health_check": "OK",
+        "syn_model_version": syn_model_version,
+        "cls_model_version": cls_model_version,
+    }
 
 
 @app.get("/synthesize", response_model=DataModel)
@@ -64,19 +68,29 @@ def synthesize_record():
     df = synthesize()
     df["model_version"] = syn_model_version
     df["date"] = datetime.now()
-    return Response(df.to_json(orient="records", date_format="iso")[1:-1], media_type="application/json")
+    return Response(
+        df.to_json(orient="records", date_format="iso")[1:-1],
+        media_type="application/json",
+    )
+
 
 @app.post("/predict", response_model=ResponseModel)
 def predict(payload: DataModel):
     parsed = json.loads(payload.json())
     result = classify([parsed])
-    
+
     label = result[0]
-    values = {'No': 0, 'Yes': 1}
+    values = {"No": 0, "Yes": 1}
     label_val = values[label]
     confidence = result[1][label_val]
 
-    return {"label": label, "confidence": confidence, "model_version": cls_model_version, "date": datetime.now()}
+    return {
+        "label": label,
+        "confidence": confidence,
+        "model_version": cls_model_version,
+        "date": datetime.now(),
+    }
+
 
 # if __name__ == "__main__":
-#     uvicorn.run("main:app", host="0.0.0.0", port=8000) 
+#     uvicorn.run("main:app", host="0.0.0.0", port=8000)
