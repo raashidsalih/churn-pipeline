@@ -31,7 +31,7 @@ Both models are hosted via FastAPI and are accessed this way. Airflow is then us
 
 ![Data Model Diagram](https://raw.githubusercontent.com/raashidsalih/churn-pipeline/main/assets/star.svg)
 
-Almost all of the services above run in their own docker containers, as seen in the diagram. These containers are running on a GCP VM, provisioned via Terraform. Finally, GitHub Actions facilitates CD, as changes made to this repo are reflected in the VM.
+Almost all of the services above run in their own docker containers, as seen in the diagram. These containers are running on a GCP VM, provisioned via Terraform. Finally, GitHub Actions facilitates CI/CD, as the code is quickly checked for any issues and changes made to this repo are reflected in the VM.
 
 ## Some points to consider
 
