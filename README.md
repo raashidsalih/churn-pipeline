@@ -11,6 +11,13 @@ This project was developed to:
  - Employ various elements of the modern data stack
  - Be applied to a somewhat realistic business use case
  - Serve as a template for others to learn from and use via extensive documentation
+# What's Next?
+ - Model retraining pipelines with Experiment Tracking using MLflow
+ - Automated model deployment using MLflow Model Registry
+ - Monitoring using Evidently and Grafana
+ - Implement unit and integration tests for Airflow functions.
+ - Develop SCD2 functionality for dimension tables.
+ - Evaluate feasibility of incremental refresh (models) via dbt to prevent overhead.
 
 ## Project Architecture
 
@@ -31,11 +38,6 @@ Almost all of the services above run in their own docker containers, as seen in 
  1. Keep in mind that predicting customer churn is a rather sophisticated use case and is difficult to get right. AutoML was only employed to obtain a viable baseline model, and this is how it should be applied most of the time. Check out [Fighting Churn with Data](https://www.amazon.com/Fighting-Churn-Data-Carl-Gold/dp/161729652X) for a more comprehensive outlook on modelling customer churn.
  2. The original dataset has been transformed and [can be found here](https://github.com/raashidsalih/churn-pipeline/tree/main/source_data). This is the dataset the models have been trained on.
  3. As mentioned earlier, the various elements which comprise this project have tried to be documented. Most files should have accompanying comments to facilitate understanding, and more high level system design justifications can be found in the README below.
-
-# Future Work
- 1. Implement unit and integration tests for Airflow functions.
- 2. Develop SCD2 functionality for dimension tables.
- 3. Evaluate feasibility of incremental refresh (models) via dbt to prevent overhead.
 
 # Running pipeline yourself
 If you want to run the pipeline on your own, here are some considerations:
@@ -80,8 +82,9 @@ If you want to run the pipeline on your own, here are some considerations:
 - However, we don't have close to the amount of data necessary to see any real performance gains and it seems like falling into the trap of premature optimization.
 -   Plus, this approach better facilitates data integrity and ease of understanding.
 
-## 4. CD
--   Uses a GitHub actions module (appleboy) that SSHs into the VM and pull --rebase this GitHub repo.
+## 4. CI/CD
+-   Fast lint check using Ruff
+-   Uses a GitHub actions module (appleboy) that SSHs into the VM and pull --rebase(s) this GitHub repo.
 -   Triggered on push to repo.
 
 ## 5. Testing
@@ -137,7 +140,3 @@ If you want to run the pipeline on your own, here are some considerations:
 ## 8. GCP VM
 -   VM instance type determined via trial and error.
 -   Once again, be wary of port forwarding and general firewall settings.
-
-# Acknowledgements
- - [Joseph Machado](https://github.com/josephmachado), startdataengineering.com
-
