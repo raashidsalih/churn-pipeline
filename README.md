@@ -117,7 +117,7 @@ If you want to run the pipeline on your own, here are some considerations:
 ## 5. dbt
 -   ![dbt DAG](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/dbt_dag.png)
 - dbt Core used in Airflow container, `dbt build` triggered via `BashOperator`.
-- This implementation can be dangerous if there is the potential for resource or environmental clashes between the two services, so be wary.
+- This implementation can be dangerous if there is the potential for resource or environmental clashes between the two services, so be wary. It would be wise to utilize tools like `pyenv`, `poetry`, or the more modern `uv` by Astral to sidestep this particular problem.
 - If you have the Kubernetes infrastructure handy, you can also do the same with `KubernetesPodOperator`for containerization and scalability.
 - Difficult to integrate dbt Cloud with Airflow unless using something like [Astronomer's Astro CLI.](https://docs.astronomer.io/learn/airflow-dbt-cloud)
 -  At a production level, the de facto method of using dbt is via:
