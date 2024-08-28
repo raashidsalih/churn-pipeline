@@ -3,8 +3,6 @@
 An end to end data pipeline that models and visualizes customer churn. The project blends together concepts from data engineering, analytics engineering, and machine learning.
 
 ![Dashboard Preview](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/dashboard.png)
-
-The dashboard [can be accessed here.](http://34.134.216.50:3000/public/dashboard/085f43f1-3301-45e2-b4f5-5bd0d789d1f3)
 # Overview
 
 This project was developed to:
