@@ -15,7 +15,7 @@ cwd = os.path.join(AIRFLOW_HOME, "dbt_project")
 with DAG(
     dag_id="dbt_transform",
     schedule_interval="0 */6 * * *",
-    start_date=datetime(2023, 8, 4),
+    start_date=datetime(2024, 9, 19),
     catchup=False,
 ) as dag:
     # Create a BashOperator task to run the dbt build command

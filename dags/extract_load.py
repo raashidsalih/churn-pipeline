@@ -50,7 +50,7 @@ def _gen_ulid(ti):
 # Create a DAG object that started at a previous date and runs hourly (cron format)
 with DAG(
     "extract_load",
-    start_date=datetime(2023, 7, 23),
+    start_date=datetime(2024, 9, 19),
     schedule_interval="0 * * * *",
     catchup=False,
 ) as dag:

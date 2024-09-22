@@ -6,4 +6,4 @@
 -- Use the data and uuid to insert a new row into the churn.classified table
 INSERT INTO churn.classified
 VALUES
-('{{uuid}}', '{{ data["model_version"]}}', '{{ data["label"]}}', {{ data["confidence"]}}, '{{ data["date"] }}');
+('{{uuid}}', '{{ data["model_version"]}}', '{{ data["predicted_churn_label"]}}', {{ data["confidence"]}}, '{{ data["date"] }}');
