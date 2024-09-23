@@ -1,0 +1,5 @@
+/.env
+/dags/__pycache__/
+/.venv/
+/FastAPI/app/__pycache__/
+/logs
