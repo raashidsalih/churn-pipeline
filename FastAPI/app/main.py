@@ -10,7 +10,7 @@ from app.model.synthesize import __version__ as syn_model_version
 from app.model.classify import classify
 from app.model.classify import __version__ as cls_model_version
 from datetime import datetime
-import uvicorn
+# import uvicorn
 
 app = FastAPI()
 
@@ -43,7 +43,7 @@ class cls_DataModel(BaseModel):
     Payment_Method: str
     Monthly_Charges: float
     Total_Charges: float
-    Actual_Churn_Label: str
+    Churn_Label: str
     model_version: str
     date: datetime
 

@@ -33,5 +33,5 @@ VALUES
 '{{ data["Payment_Method"] }}',
 {{ data["Monthly_Charges"]}},
 {{ data["Total_Charges"]}},
-{{ data["Actual_Churn_Label"]}}
+'{{ data["Churn_Label"]}}'
 );
