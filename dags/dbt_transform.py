@@ -16,12 +16,13 @@ with DAG(
     dag_id="dbt_transform",
     schedule_interval="0 */6 * * *",
     start_date=datetime(2024, 9, 19),
+    max_active_runs=1, 
     catchup=False,
 ) as dag:
     # Create a BashOperator task to run the dbt build command
     dbt_build = BashOperator(
         task_id="dbt_build",
-        bash_command="dbt build",
+        bash_command="dbt build --profiles-dir ../.dbt",
         # change working directory from path defined above
         cwd=cwd,
         env=os.environ.copy(),

@@ -111,10 +111,17 @@ def synthesize_record():
 def predict(payload: cls_DataModel):
     parsed = json.loads(payload.json())
     result = classify([parsed])
+    if result == [0,0]:
+        return {
+        "predicted_churn_label": "label",
+        "confidence": 0,
+        "model_version": "cls_model_version",
+        "date": datetime.now(),
+        }
 
-    label = result[0]
-    values = {"No": 0, "Yes": 1}
-    label_val = values[label]
+    label_val = result[0]
+    labels = {0: "No", 1: "Yes"}
+    label = labels[label_val]
     confidence = result[1][label_val]
 
     return {

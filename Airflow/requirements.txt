@@ -1,0 +1,11 @@
+requests
+python-ulid
+dbt-postgres
+mlflow
+pandas
+numpy==1.26.4
+psycopg2-binary
+SQLAlchemy
+flaml[automl]==2.2.0
+scikit-learn==1.5.1
+xgboost==2.1.1

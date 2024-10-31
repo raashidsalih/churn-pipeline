@@ -19,7 +19,9 @@
 version: '3.8'
 x-airflow-common:
   &airflow-common
-  image: apache/airflow:2.6.3
+  # image: apache/airflow:2.10.2
+  build: ./Airflow
+  env_file: ".env"
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -34,14 +36,15 @@ x-airflow-common:
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: 60
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
-    _PIP_ADDITIONAL_REQUIREMENTS: 'requests python-ulid dbt-postgres'
+    _PIP_ADDITIONAL_REQUIREMENTS: ''
+    # _PIP_ADDITIONAL_REQUIREMENTS: 'requests python-ulid dbt-postgres mlflow pandas numpy==1.21.6 psycopg2-binary SQLAlchemy flaml==1.2.4 scikit-learn'
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/dbt_project:/opt/airflow/dbt_project
-    - ${AIRFLOW_PROJ_DIR:-.}/dbt_profile:/home/airflow/.dbt
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt_profile:/opt/airflow/.dbt
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -60,7 +63,13 @@ services:
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "airflow"
+        ]
       interval: 10s
       retries: 5
       start_period: 5s
@@ -80,10 +89,17 @@ services:
 
   airflow-webserver:
     <<: *airflow-common
-    command: webserver
+    # command: webserver
+    container_name: airflow-webserver
+    #  --default-artifact-root '/opt/airflow/dags/retraining/mlruns'
+    # mlflow db upgrade 'postgresql://pguser:pgpassword@pg:5432/pgdb' && 
+    #--backend-store-uri 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg:5432/${POSTGRES_DB}' --default-artifact-root '/opt/airflow/dags/retraining/mlruns'
+    entrypoint: sh -c "mlflow server --backend-store-uri 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg:5432/${POSTGRES_DB}' --host 0.0.0.0 --port 5000 --serve-artifacts --artifacts-destination 's3://${MLFLOW_BUCKET_NAME}' & python3 /opt/airflow/dags/retraining/retraining.py & airflow webserver"
+            #  python3 /opt/airflow/dags/retraining/retraining.py"
     ports:
       - "8080:8080"
       - "5000:5000"
+      - "6000:6000"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 30s
@@ -95,6 +111,11 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+      warehouse:
+        condition: service_healthy
+      create_buckets:
+        condition: service_completed_successfully
+    env_file: ".env"
 
   airflow-scheduler:
     <<: *airflow-common
@@ -158,17 +179,17 @@ services:
         function ver() {
           printf "%04d%04d%04d%04d" $${1//./ }
         }
-        airflow_version=$$(AIRFLOW__LOGGING__LOGGING_LEVEL=INFO && gosu airflow airflow version)
-        airflow_version_comparable=$$(ver $${airflow_version})
-        min_airflow_version=2.2.0
-        min_airflow_version_comparable=$$(ver $${min_airflow_version})
-        if (( airflow_version_comparable < min_airflow_version_comparable )); then
-          echo
-          echo -e "\033[1;31mERROR!!!: Too old Airflow version $${airflow_version}!\e[0m"
-          echo "The minimum Airflow version supported: $${min_airflow_version}. Only use this or higher!"
-          echo
-          exit 1
-        fi
+        # airflow_version=$$(AIRFLOW__LOGGING__LOGGING_LEVEL=INFO && gosu airflow airflow version)
+        # airflow_version_comparable=$$(ver $${airflow_version})
+        # min_airflow_version=2.2.0
+        # min_airflow_version_comparable=$$(ver $${min_airflow_version})
+        # if (( airflow_version_comparable < min_airflow_version_comparable )); then
+        #   echo
+        #   echo -e "\033[1;31mERROR!!!: Too old Airflow version $${airflow_version}!\e[0m"
+        #   echo "The minimum Airflow version supported: $${min_airflow_version}. Only use this or higher!"
+        #   echo
+        #   exit 1
+        # fi
         if [[ -z "${AIRFLOW_UID}" ]]; then
           echo
           echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
@@ -261,56 +282,115 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    env_file: ".env"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  create_buckets:
+    image: minio/mc
+    env_file: ".env"
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set minioserver http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}) do echo '...waiting...' && sleep 1; done;
+      /usr/bin/mc mb minioserver/${MLFLOW_BUCKET_NAME};
+      exit 0;
+      "
+
   fastapi:
     build: ./FastAPI
     ports:
       - '80:80'
+    env_file: ".env"
+    depends_on:
+      warehouse:
+        condition: service_healthy
+      
+  # mlflow:
+  #   restart: always
+  #   build: ./mlflow
+  #   image: mlflow_server
+  #   container_name: mlflow_server
+  #   depends_on:
+  #     - warehouse
+  #   ports:
+  #     - "5000:5000"
+  #   # command: mlflow server --host 0.0.0.0
+  #   # environment:
+  #   #   - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+  #   #   - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+  #   #   - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+  #   command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri 'postgresql://pguser:pgpassword@pg:5432/pgdb' --default-artifact-root '/mlruns'
 
   warehouse:
     container_name: pg
     image: postgres:13
     restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+    env_file: ".env"
     volumes:
        - ./pg_data:/var/lib/postgresql/data
        - ./script:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-d",
+          "${POSTGRES_DB}",
+          "-U",
+          "${POSTGRES_USER}"
+        ]
+      interval: 10s
+      retries: 5
+      start_period: 5s
 
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4:7.4
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-      PGADMIN_LISTEN_PORT: 80
-    ports:
-      - "4000:80"
-    volumes:
-      - ./pgadmin_data:/var/lib/pgadmin
+  # pgadmin:
+  #   container_name: pgadmin
+  #   image: dpage/pgadmin4:7.4
+  #   restart: always
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+  #     PGADMIN_LISTEN_PORT: 80
+  #   ports:
+  #     - "4000:80"
+  #   volumes:
+  #     - ./pgadmin_data:/var/lib/pgadmin
+      # env_file: ".env"
 
-  dashboard:
-    image: metabase/metabase
-    container_name: dashboard
-    environment:
-      MB_DB_FILE: ${MB_DB_FILE}
-      MB_DB_TYPE: 'postgres'
-      MB_DB_DBNAME: ${POSTGRES_DB}
-      MB_DB_PORT: 5432
-      MB_DB_USER: ${POSTGRES_USER}
-      MB_DB_HOST: 'pg'
-      MB_DB_PASS: ${POSTGRES_PASSWORD}
-      JAVA_TIMEZONE: ${MB_JAVA_TIMEZONE}
-    volumes:
-      - './metabase:/metabase-data'
-    depends_on:
-      - 'warehouse'
-    ports:
-      - "3000:3000"
+  # dashboard:
+  #   image: metabase/metabase
+  #   container_name: dashboard
+  #   environment:
+  #     MB_DB_FILE: ${MB_DB_FILE}
+  #     MB_DB_TYPE: 'postgres'
+  #     MB_DB_DBNAME: ${POSTGRES_DB}
+  #     MB_DB_PORT: 5432
+  #     MB_DB_USER: ${POSTGRES_USER}
+  #     MB_DB_HOST: 'pg'
+  #     MB_DB_PASS: ${POSTGRES_PASSWORD}
+  #     JAVA_TIMEZONE: ${MB_JAVA_TIMEZONE}
+  #   volumes:
+  #     - './metabase:/metabase-data'
+  #   depends_on:
+  #     - 'warehouse'
+  #   ports:
+  #     - "3000:3000"
 
 volumes:
   postgres-db-volume:
@@ -319,3 +399,4 @@ volumes:
   dbt_profile:
   dbt_project:
   metabase:
+  minio_data:
