@@ -1,6 +1,6 @@
 ﻿# Customer Churn Data Pipeline
 
-An end to end data pipeline that models and visualizes customer churn. The project blends together concepts from data engineering, analytics engineering, and machine learning.
+An end to end data pipeline that models and visualizes customer churn. The project blends together concepts from data engineering, analytics engineering, and MLOps.
 
 ![Dashboard Preview](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/dashboard.png)
 # Overview
@@ -21,15 +21,15 @@ This project was developed to:
 
 ![Architecture Diagram](https://raw.githubusercontent.com/raashidsalih/churn-pipeline/main/assets/architecture.svg)
 
-For this project, the Telco Customer Churn data module which is a sample dataset on IBM's Cognos Analytics platform is used. This seemed like the best representative considering the difficulty in finding a decent dataset for the use case.
+For this project, the Telco Customer Churn data module which is a sample dataset on IBM's Cognos Analytics platform was selected because it seemed like the best representative considering the difficulty in finding a decent dataset for the use case.
 
-The dataset is then used to train two models. The first is a Gaussian Copula Synthesizer to produce synthetic data with characteristics similar to the original. This is done since there is not much data to go around and serves as a rudimentary imitation of data entering the database, The second is an LGBModel which is a product of using FLAML's AutoML implementation on the data, and its purpose is to predict churn status for a particular user.
+The dataset is then used to train two models. The first is a Gaussian Copula Synthesizer to produce synthetic data with characteristics similar to the original. This is done since there is not much data to go around and serves as a rudimentary imitation of data entering the database, The second is the product of using FLAML's AutoML implementation on the data, and its purpose is to predict churn status for a particular user. These experiments are tracked using MLFlow for better observability.
 
-Both models are hosted via FastAPI and are accessed this way. Airflow is then used to orchestrate the pulling of data from the Synthesizer, obtaining churn status prediction for said data from the classification model, generating a ULID for each customer, and writing it all to a Postgres database. Airflow is also used to trigger dbt afterward to run tests and apply necessary transformations. The data is modeled after the star schema and is finally visualized as a dashboard using Metabase.
+The synthesizer model is hosted via FastAPI, while the classifier is deployed with MLFlow model registry, which dynamically exposes the latest "Champion" model for inference. Airflow is then used to orchestrate the pulling of data from the Synthesizer, obtaining churn status prediction for said data from the classification model, generating a ULID for each customer, and writing it all to a Postgres database. Airflow is also used to trigger dbt afterward to run tests and apply necessary transformations. The data is modeled after the star schema and is finally visualized as a dashboard using Metabase. The various model metrics are also stored and is monitored with Grafana to proactively deal with any problems.
 
 ![Data Model Diagram](https://raw.githubusercontent.com/raashidsalih/churn-pipeline/main/assets/star.svg)
 
-Almost all of the services above run in their own docker containers, as seen in the diagram. These containers are running on a GCP VM, provisioned via Terraform. Finally, GitHub Actions facilitates CI/CD, as the code is quickly checked for any issues and changes made to this repo are reflected in the VM.
+Almost all of the services above run in their own docker containers, as seen in the diagram. These containers are running on a GCP VM, provisioned via Terraform. Finally, GitHub Actions facilitates CI/CD, as the code is quickly checked for any issues using Ruff and changes made to this repo are reflected in the VM.
 
 ## Some points to consider
 
