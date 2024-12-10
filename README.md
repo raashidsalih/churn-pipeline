@@ -1,6 +1,6 @@
-﻿# Customer Churn Data Pipeline
+﻿# Customer Churn Analytics Platform
 
-An end to end data pipeline that models and visualizes customer churn. The project blends together concepts from data engineering, analytics engineering, and MLOps.
+An end to end analytics platform that models and visualizes customer churn. The project blends together concepts from data engineering, analytics engineering, and MLOps. (please refer to the mlops branch for latest changes)
 
 ![Dashboard Preview](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/dashboard.png)
 # Overview
