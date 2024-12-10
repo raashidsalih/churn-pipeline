@@ -59,8 +59,8 @@ def _gen_ulid(ti):
 with DAG(
     "extract_load",
     start_date=datetime(2024, 9, 19),
-    schedule_interval="0 * * * *",
-    # schedule="@continuous",
+    # schedule_interval="0 * * * *",
+    schedule="@continuous",
     max_active_runs=1, 
     catchup=False,
 ) as dag:
