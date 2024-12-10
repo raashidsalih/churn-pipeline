@@ -49,3 +49,17 @@ CREATE TABLE churn.classified (
     inference_datetime TIMESTAMP,
     insert_datetime TIMESTAMP not null default CURRENT_TIMESTAMP
 );
+
+DROP TABLE IF EXISTS churn.models;
+CREATE TABLE churn.models (
+    model_version VARCHAR(20),
+    accuracy FLOAT,
+    f1_score FLOAT,
+    log_loss FLOAT,
+    precision FLOAT,
+    recall FLOAT,
+    roc_auc FLOAT,
+    metrics_type VARCHAR(50),
+    insert_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (model_version, metrics_type, insert_datetime)
+);
