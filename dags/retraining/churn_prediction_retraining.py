@@ -2,28 +2,34 @@ from pathlib import Path
 import pandas as pd
 import psycopg2
 import os
-from sqlalchemy import create_engine
 from flaml import AutoML
 import mlflow
 from mlflow.exceptions import MlflowException
 from mlflow import MlflowClient
 from mlflow.models import infer_signature, set_signature
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, log_loss, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    log_loss,
+    roc_auc_score,
+)
+
 
 def main():
     BASE_DIR = Path(__file__).resolve(strict=True).parent
 
     # Access environment variables
-    user = os.environ.get('POSTGRES_USER')
-    password = os.environ.get('POSTGRES_PASSWORD')
-    db = os.environ.get('POSTGRES_DB')
+    user = os.environ.get("POSTGRES_USER")
+    password = os.environ.get("POSTGRES_PASSWORD")
+    db = os.environ.get("POSTGRES_DB")
 
     # Construct the connection string
     conn_str = f"postgresql://{user}:{password}@pg:5432/{db}"
 
     # Initialize mlflow and connect to the same Postgres database
     mlflow.set_tracking_uri("http://airflow-webserver:5000")
-    experiment = mlflow.set_experiment("Customer Churn Prediction")
 
     # mlflow model credentials
     model_name = "ChurnPredictionModel"
@@ -40,7 +46,6 @@ def main():
 
     # if model exists, get retraining data. Else, use train_set to develop first model.
     if model_exists:
-        engine = create_engine(conn_str)
         conn = psycopg2.connect(conn_str)
         query = """SELECT 
         loc.country AS Country,
@@ -87,12 +92,12 @@ def main():
         df = pd.read_csv(f"{BASE_DIR}/train_set.csv", encoding="utf-8")
 
     # Preprocess training set and read test set
-    features = df.drop(columns=['churn_label'])
-    target = df['churn_label']
+    features = df.drop(columns=["churn_label"])
+    target = df["churn_label"]
 
     test_set = pd.read_csv(f"{BASE_DIR}/test_set.csv", encoding="utf-8")
-    test_features = test_set.drop(columns=['churn_label'])
-    test_target = test_set['churn_label']
+    test_features = test_set.drop(columns=["churn_label"])
+    test_target = test_set["churn_label"]
 
     automl = AutoML()
     client = MlflowClient()
@@ -101,26 +106,34 @@ def main():
 
     with mlflow.start_run() as run:
         mlflow.sklearn.autolog()
-        automl.fit(features, target, task="classification", time_budget=60*1)
-        
+        automl.fit(features, target, task="classification", time_budget=60 * 1)
+
         # Log the model
         model_uri = f"runs:/{run.info.run_id}/model"
         set_signature(model_uri, inferred_signature)
         model = mlflow.register_model(model_uri, "ChurnPredictionModel")
-        client.set_registered_model_alias("ChurnPredictionModel", "Champion", version=model.version)  
+        client.set_registered_model_alias(
+            "ChurnPredictionModel", "Champion", version=model.version
+        )
 
         # Make predictions on the test set
         test_predictions = automl.predict(test_features)
-        test_probabilities = automl.predict_proba(test_features)[:, 1]  # Assuming binary classification
-        
+        test_probabilities = automl.predict_proba(test_features)[
+            :, 1
+        ]  # Assuming binary classification
+
         # Calculate test metrics
         test_accuracy = accuracy_score(test_target, test_predictions)
-        test_precision = precision_score(test_target, test_predictions, pos_label="Yes", zero_division=1)
-        test_recall = recall_score(test_target, test_predictions, pos_label="Yes", zero_division=1)
+        test_precision = precision_score(
+            test_target, test_predictions, pos_label="Yes", zero_division=1
+        )
+        test_recall = recall_score(
+            test_target, test_predictions, pos_label="Yes", zero_division=1
+        )
         test_f1 = f1_score(test_target, test_predictions, pos_label="Yes")
         test_log_loss = log_loss(test_target, test_probabilities)
         test_roc_auc = roc_auc_score(test_target, test_probabilities)
-        
+
         # Log test metrics
         mlflow.log_metric("test_accuracy_score", test_accuracy)
         mlflow.log_metric("test_f1_score", test_f1)
@@ -136,25 +149,47 @@ def main():
         cursor = conn.cursor()
 
         if model_exists:
-            status_train="retraining"
-            status_test="test_retraining"
+            status_train = "retraining"
+            status_test = "test_retraining"
         else:
-            status_train="training"
-            status_test="test"
+            status_train = "training"
+            status_test = "test"
 
         # Insert training metrics
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO churn.models (model_version, accuracy, f1_score, log_loss, precision, recall, roc_auc, metrics_type)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (str(float(model.version)), run_data_dict['metrics']['training_accuracy_score'], run_data_dict['metrics']['training_f1_score'], 
-              run_data_dict['metrics']['training_log_loss'], run_data_dict['metrics']['training_precision_score'], 
-              run_data_dict['metrics']['training_recall_score'], run_data_dict['metrics']['training_roc_auc'], status_train))
+        """,
+            (
+                str(float(model.version)),
+                run_data_dict["metrics"]["training_accuracy_score"],
+                run_data_dict["metrics"]["training_f1_score"],
+                run_data_dict["metrics"]["training_log_loss"],
+                run_data_dict["metrics"]["training_precision_score"],
+                run_data_dict["metrics"]["training_recall_score"],
+                run_data_dict["metrics"]["training_roc_auc"],
+                status_train,
+            ),
+        )
 
         # Insert test metrics
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO churn.models (model_version, accuracy, f1_score, log_loss, precision, recall, roc_auc, metrics_type)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (str(float(model.version)), test_accuracy, test_f1, test_log_loss, test_precision, test_recall, test_roc_auc, status_test))
+        """,
+            (
+                str(float(model.version)),
+                test_accuracy,
+                test_f1,
+                test_log_loss,
+                test_precision,
+                test_recall,
+                test_roc_auc,
+                status_test,
+            ),
+        )
 
         conn.commit()
         cursor.close()
@@ -164,7 +199,7 @@ def main():
         print("Retraining complete!")
     else:
         print("First model successfully created!")
-        
+
 
 if __name__ == "__main__":
     main()

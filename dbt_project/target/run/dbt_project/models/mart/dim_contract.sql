@@ -17,6 +17,7 @@
         payment_method, 
         monthly_charges, 
         total_charges, 
+        actual_churn_label, 
         insert_datetime
 
     from "pgdb"."churn"."stg_contract"

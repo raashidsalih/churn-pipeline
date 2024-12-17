@@ -13,7 +13,7 @@
     select
         id, 
         model_version, 
-        churn_label, 
+        predicted_churn_label, 
         confidence, 
         inference_datetime, 
         insert_datetime

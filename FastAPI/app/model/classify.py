@@ -1,4 +1,5 @@
 # ruff: noqa: F401
+# ruff: noqa: F841
 
 import mlflow
 import mlflow.sklearn
@@ -15,10 +16,10 @@ import os
 # conn_str = "postgresql://pguser:pgpassword@pg:5432/pgdb"
 
 # Access environment variables
-user = os.environ.get('POSTGRES_USER')
-password = os.environ.get('POSTGRES_PASSWORD')
-db = os.environ.get('POSTGRES_DB')
-artifact_uri = os.environ.get('MLFLOW_S3_ENDPOINT_URL')
+user = os.environ.get("POSTGRES_USER")
+password = os.environ.get("POSTGRES_PASSWORD")
+db = os.environ.get("POSTGRES_DB")
+artifact_uri = os.environ.get("MLFLOW_S3_ENDPOINT_URL")
 
 # # Construct the connection string
 # conn_str = f"postgresql://{user}:{password}@pg:5432/{db}"
@@ -30,10 +31,20 @@ client = MlflowClient()
 # Load the model from MLflow registry
 model_name = "ChurnPredictionModel"
 model_alias = "Champion"
-__version__ = "0.0"
+while True:
+    try:
+        model = mlflow.sklearn.load_model(f"models:/{model_name}@{model_alias}")
+        model_info = client.get_model_version_by_alias(model_name, model_alias)
+        __version__ = str(float(model_info.version))
+        print("Model loaded successfully.")
+        break
+    except MlflowException as e:
+        print(f"Failed to load model: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
 
 def classify(data):
-
     while True:
         try:
             model = mlflow.sklearn.load_model(f"models:/{model_name}@{model_alias}")
@@ -43,10 +54,10 @@ def classify(data):
             break
         except MlflowException as e:
             print(f"Failed to load model: {e}")
-            return [0,0]
+            return [0, 0]
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
-            return [0,0]
+            return [0, 0]
 
     df_raw = pd.DataFrame.from_dict(data)
     df = df_raw[
@@ -83,7 +94,7 @@ def classify(data):
     df = df[model.feature_names_in_]
 
     label_encoder = LabelEncoder()
-    for column in df.select_dtypes(include=['object']).columns:
+    for column in df.select_dtypes(include=["object"]).columns:
         df[column] = label_encoder.fit_transform(df[column])
 
     pred = model.predict(df)

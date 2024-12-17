@@ -89,15 +89,12 @@ services:
     <<: *airflow-common
     # command: webserver
     container_name: airflow-webserver
-    #  --default-artifact-root '/opt/airflow/dags/retraining/mlruns'
-    # mlflow db upgrade 'postgresql://pguser:pgpassword@pg:5432/pgdb' && 
-    #--backend-store-uri 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg:5432/${POSTGRES_DB}' --default-artifact-root '/opt/airflow/dags/retraining/mlruns'
-    entrypoint: sh -c "mlflow server --backend-store-uri 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg:5432/${POSTGRES_DB}' --host 0.0.0.0 --port 5000 --serve-artifacts --artifacts-destination 's3://${MLFLOW_BUCKET_NAME}' & python3 /opt/airflow/dags/retraining/retraining.py & airflow webserver"
-            #  python3 /opt/airflow/dags/retraining/retraining.py"
+    # entrypoint: sh -c "mlflow server --backend-store-uri 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg:5432/${POSTGRES_DB}' --host 0.0.0.0 --port 5000 --serve-artifacts --artifacts-destination 's3://${MLFLOW_BUCKET_NAME}' & python3 /opt/airflow/dags/retraining/retraining.py & cd $AIRFLOW_HOME/dbt_project && nohup dbt docs serve --port 8001 --host '0.0.0.0' --profiles-dir ../.dbt --no-browser > dbt_docs_serve.log 2>&1 & cd / && airflow webserver"
+    entrypoint: sh -c "mlflow server --backend-store-uri 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg:5432/${POSTGRES_DB}' --host 0.0.0.0 --port 5000 --serve-artifacts --artifacts-destination 's3://${MLFLOW_BUCKET_NAME}' & python3 /opt/airflow/dags/retraining/retraining.py & airflow webserver"    
     ports:
       - "8080:8080"
       - "5000:5000"
-      - "6000:6000"
+      - "8001:8001"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 30s

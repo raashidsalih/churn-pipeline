@@ -47,6 +47,7 @@ class cls_DataModel(BaseModel):
     model_version: str
     date: datetime
 
+
 class syn_DataModel(BaseModel):
     CustomerID: str
     Country: str
@@ -111,12 +112,12 @@ def synthesize_record():
 def predict(payload: cls_DataModel):
     parsed = json.loads(payload.json())
     result = classify([parsed])
-    if result == [0,0]:
+    if result == [0, 0]:
         return {
-        "predicted_churn_label": "label",
-        "confidence": 0,
-        "model_version": "cls_model_version",
-        "date": datetime.now(),
+            "predicted_churn_label": "label",
+            "confidence": 0,
+            "model_version": "cls_model_version",
+            "date": datetime.now(),
         }
 
     label_val = result[0]

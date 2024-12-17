@@ -61,7 +61,7 @@ with DAG(
     start_date=datetime(2024, 9, 19),
     # schedule_interval="0 * * * *",
     schedule="@continuous",
-    max_active_runs=1, 
+    max_active_runs=1,
     catchup=False,
 ) as dag:
     # Create a PythonOperator task to extract synthetic data

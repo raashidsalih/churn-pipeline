@@ -6,5 +6,5 @@ catboost==1.2.0
 fastapi==0.115.0
 mlflow==2.16.0
 scikit-learn==1.5.1
+sdv==1.16.2
 psycopg2
-sdv
