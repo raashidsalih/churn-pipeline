@@ -1,0 +1,8 @@
+__pycache__/
+/.env
+/.venv/
+/logs
+/pg_data
+/pgadmin_data
+/minio_data
+/dbt_project/target

@@ -10,12 +10,12 @@ from app.model.synthesize import __version__ as syn_model_version
 from app.model.classify import classify
 from app.model.classify import __version__ as cls_model_version
 from datetime import datetime
-import uvicorn
+# import uvicorn
 
 app = FastAPI()
 
 
-class DataModel(BaseModel):
+class cls_DataModel(BaseModel):
     CustomerID: str
     Country: str
     State: str
@@ -43,12 +43,46 @@ class DataModel(BaseModel):
     Payment_Method: str
     Monthly_Charges: float
     Total_Charges: float
+    Churn_Label: str
+    model_version: str
+    date: datetime
+
+
+class syn_DataModel(BaseModel):
+    CustomerID: str
+    Country: str
+    State: str
+    City: str
+    Zip_Code: int
+    Lat_Long: str
+    Latitude: float
+    Longitude: float
+    Gender: str
+    Senior_Citizen: str
+    Partner: str
+    Dependents: str
+    Tenure_Months: int
+    Phone_Service: str
+    Multiple_Lines: str
+    Internet_Service: str
+    Online_Security: str
+    Online_Backup: str
+    Device_Protection: str
+    Tech_Support: str
+    Streaming_TV: str
+    Streaming_Movies: str
+    Contract: str
+    Paperless_Billing: str
+    Payment_Method: str
+    Monthly_Charges: float
+    Total_Charges: float
+    Actual_Churn_Label: str
     model_version: str
     date: datetime
 
 
 class ResponseModel(BaseModel):
-    label: str
+    predicted_churn_label: str
     confidence: float
     model_version: str
     date: datetime
@@ -63,7 +97,7 @@ def home():
     }
 
 
-@app.get("/synthesize", response_model=DataModel)
+@app.get("/synthesize", response_model=syn_DataModel)
 def synthesize_record():
     df = synthesize()
     df["model_version"] = syn_model_version
@@ -75,17 +109,24 @@ def synthesize_record():
 
 
 @app.post("/predict", response_model=ResponseModel)
-def predict(payload: DataModel):
+def predict(payload: cls_DataModel):
     parsed = json.loads(payload.json())
     result = classify([parsed])
+    if result == [0, 0]:
+        return {
+            "predicted_churn_label": "label",
+            "confidence": 0,
+            "model_version": "cls_model_version",
+            "date": datetime.now(),
+        }
 
-    label = result[0]
-    values = {"No": 0, "Yes": 1}
-    label_val = values[label]
+    label_val = result[0]
+    labels = {0: "No", 1: "Yes"}
+    label = labels[label_val]
     confidence = result[1][label_val]
 
     return {
-        "label": label,
+        "predicted_churn_label": label,
         "confidence": confidence,
         "model_version": cls_model_version,
         "date": datetime.now(),

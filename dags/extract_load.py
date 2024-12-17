@@ -20,7 +20,11 @@ def _extract(ti):
     # Send a get request to the url and get the data
     response = requests.get(url)
     # Parse the response in json format
-    data = response.json()
+    try:
+        data = response.json()
+    except requests.exceptions.JSONDecodeError as e:
+        print(f"Failed to decode JSON: {e}")
+        print(f"Response content: {response.text}")
     # Push the data to xcom with key "syn_data"
     ti.xcom_push(key="syn_data", value=data)
 
@@ -34,7 +38,11 @@ def _classify(ti):
     # Send a post request to the url with the data as json payload and get model prediction
     response = requests.post(url, json=data)
     # Parse the response as json data
-    data = response.json()
+    try:
+        data = response.json()
+    except requests.exceptions.JSONDecodeError as e:
+        print(f"Failed to decode JSON: {e}")
+        print(f"Response content: {response.text}")
     # Push the data to xcom with key "inference"
     ti.xcom_push(key="inference", value=data)
 
@@ -50,8 +58,10 @@ def _gen_ulid(ti):
 # Create a DAG object that started at a previous date and runs hourly (cron format)
 with DAG(
     "extract_load",
-    start_date=datetime(2023, 7, 23),
-    schedule_interval="0 * * * *",
+    start_date=datetime(2024, 9, 19),
+    # schedule_interval="0 * * * *",
+    schedule="@continuous",
+    max_active_runs=1,
     catchup=False,
 ) as dag:
     # Create a PythonOperator task to extract synthetic data

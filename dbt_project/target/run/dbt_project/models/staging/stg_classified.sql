@@ -13,7 +13,7 @@
     select
         id, 
         model_version, 
-        churn_label, 
+        predicted_churn_label, 
         ROUND(confidence::numeric,3) as confidence, 
         inference_datetime, 
         CURRENT_TIMESTAMP as insert_datetime

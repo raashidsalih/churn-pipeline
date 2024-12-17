@@ -2,7 +2,8 @@ with
 contract as (
 
     select
-        id
+        id,
+        actual_churn_label
 
     from {{ ref('dim_contract') }}
 ),
@@ -12,7 +13,7 @@ classified as (
     
     select
         id, 
-        churn_label, 
+        predicted_churn_label, 
         confidence
 
     from {{ ref('dim_classified') }}
@@ -23,7 +24,8 @@ final as (
 
     select
         contract.id,
-        classified.churn_label,
+        contract.actual_churn_label,
+        classified.predicted_churn_label,
         classified.confidence,
         CURRENT_TIMESTAMP as insert_datetime
 

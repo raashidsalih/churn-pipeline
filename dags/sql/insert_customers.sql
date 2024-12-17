@@ -32,5 +32,6 @@ VALUES
 '{{ data["Paperless_Billing"] }}',
 '{{ data["Payment_Method"] }}',
 {{ data["Monthly_Charges"]}},
-{{ data["Total_Charges"]}}
+{{ data["Total_Charges"]}},
+'{{ data["Churn_Label"]}}'
 );
