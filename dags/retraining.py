@@ -3,7 +3,7 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 import sys
 from pathlib import Path
-from churn_prediction_retraining import main
+from retraining.churn_prediction_retraining import main
 
 # Add the retraining folder to the Python path
 dag_folder = Path(__file__).resolve().parent
