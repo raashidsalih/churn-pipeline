@@ -3,7 +3,7 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 import sys
 from pathlib import Path
-from dynamic_metrics import main
+from dynamic_metrics.dynamic_metrics import main
 
 # Add the dynamic_metrics folder to the Python path
 dag_folder = Path(__file__).resolve().parent
