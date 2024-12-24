@@ -1,8 +1,10 @@
-﻿# Customer Churn Analytics Platform
+# Customer Churn Analytics Platform
 
-An end to end analytics platform that models and visualizes customer churn. The project blends together concepts from data engineering, analytics engineering, and MLOps. (please refer to the mlops branch for latest changes)
+An end to end analytics platform that models and visualizes customer churn. The project blends together concepts from data engineering, analytics engineering, and MLOps.
 
 ![Dashboard Preview](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/dashboard.png)
+
+![Monitoring Dashboard](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/monitoring_dashboard.png)
 # Overview
 
 This project was developed to:
@@ -10,9 +12,9 @@ This project was developed to:
  - Be applied to a somewhat realistic business use case
  - Serve as a template for others to learn from and use via extensive documentation
 # What's Next?
- - Model retraining pipelines with Experiment Tracking using MLflow
- - Automated model deployment using MLflow Model Registry
- - Monitoring using Evidently and Grafana
+ - ~~Model retraining pipelines with Experiment Tracking using MLflow~~
+ - ~~Automated model deployment using MLflow Model Registry~~
+ - ~~Monitoring using Evidently and Grafana~~
  - Implement unit and integration tests for Airflow functions.
  - Develop SCD2 functionality for dimension tables.
  - Evaluate feasibility of incremental refresh (models) via dbt to prevent overhead.
@@ -23,9 +25,9 @@ This project was developed to:
 
 For this project, the Telco Customer Churn data module which is a sample dataset on IBM's Cognos Analytics platform was selected because it seemed like the best representative considering the difficulty in finding a decent dataset for the use case.
 
-The dataset is then used to train two models. The first is a Gaussian Copula Synthesizer to produce synthetic data with characteristics similar to the original. This is done since there is not much data to go around and serves as a rudimentary imitation of data entering the database, The second is the product of using FLAML's AutoML implementation on the data, and its purpose is to predict churn status for a particular user. These experiments are tracked using MLFlow for better observability.
+The dataset is then used to train two models. The first is a Gaussian Copula Synthesizer to produce synthetic data with characteristics similar to the original. This is done since there is not much data to go around and serves as a rudimentary imitation of data entering the database, The second is the product of using FLAML's AutoML implementation on the data, and its purpose is to predict churn status for a particular user. These experiments are tracked using MLFlow for better observability and minIO is employed as an object store for the various artefacts involved.
 
-The synthesizer model is hosted via FastAPI, while the classifier is deployed with MLFlow model registry, which dynamically exposes the latest "Champion" model for inference. Airflow is then used to orchestrate the pulling of data from the Synthesizer, obtaining churn status prediction for said data from the classification model, generating a ULID for each customer, and writing it all to a Postgres database. Airflow is also used to trigger dbt afterward to run tests and apply necessary transformations. The data is modeled after the star schema and is finally visualized as a dashboard using Metabase. The various model metrics are also stored and is monitored with Grafana to proactively deal with any problems.
+The synthesizer model is hosted via FastAPI, while the classifier is deployed with MLFlow model registry, which dynamically exposes the latest "Champion" model for inference. Airflow is then used to orchestrate the pulling of data from the Synthesizer, obtaining churn status prediction for said data from the classification model, generating a ULID for each customer, and writing it all to a Postgres database. It then triggers dbt afterward to run tests and apply necessary transformations. Airflow is used to record model metrics at a regular frequency and also to retrain the classifier. The data is modeled after the star schema and is finally visualized as a dashboard using Metabase. The various model metrics are stored and is monitored with Grafana to proactively deal with any problems that may arise.
 
 ![Data Model Diagram](https://raw.githubusercontent.com/raashidsalih/churn-pipeline/main/assets/star.svg)
 
@@ -46,21 +48,21 @@ If you want to run the pipeline on your own, here are some considerations:
  - Add path to credentials file and locally generated SSH files in the [Terraform main file (main.tf)](https://github.com/raashidsalih/churn-pipeline/blob/main/terraform/main.tf).
  - Replace variables in [variables.tf](https://github.com/raashidsalih/churn-pipeline/blob/main/terraform/variables.tf) to your liking.
  - If CD implementation is going to be used, make changes to the output filepath (if necessary), and add necessary GitHub secrets.
+ - Add Postgres connection information to Airflow with name pg_conn.
+ - You can use the backup under the ```assets``` folder to recreate the Grafana dashboard.
  - Beware of port forwarding if Terraform is being used to create the VM that the project runs on. If the instance external IP address is known, anyone can gain access to the running Docker containers.
 
 # Concepts Employed
 ## 1. ML Models
 ### 1. AutoML Model
 -   Used to quickly obtain a viable baseline
--   First option for framework was h2o.ai as it seemed like a mature offering. However, it was difficult to get it to run locally.
--   Used Microsoft's FLAML instead because it had streamlined access to core AutoML use cases.
--   However, can be too minimalistic for some.
--   Ran for 3 hours, the final model is LGBModel.
+-   Selected Microsoft's FLAML because it had more streamlined access to core AutoML use cases.
+-   Total training time facilitates a threshold for training, and can be modified.
 -   Used predict_proba as a crude proxy for confidence. It can benefit from calibration for a more reliable measure.
 
 ### 2. Data Synthesizer Model
 -   Went for this design to obtain something akin to realtime data
--   Went with a gaussian copula model from the SDVault library
+-   Ended up with a gaussian copula model from the SDVault library
 -   Initially wanted to go with the popular [CTGAN model from this paper](https://arxiv.org/abs/1907.00503), but the final model was an order of magnitude bigger and performed about the same as the GCop Model
 -   Size and speed of inference is important since the model going into production
 -   Constraints are added such that location data is generated consistently (i.e. you don't get random city associated with random zip code)
@@ -86,9 +88,15 @@ If you want to run the pipeline on your own, here are some considerations:
 -   Triggered on push to repo.
 
 ## 5. Testing
--   Testing applied just for data at beginning of transformation layer via dbt.
+-   Testing applied just for data (for now) at beginning of transformation layer via dbt.
 -   Only applied at source since the subsequent transformations don't affect the conditions checked by test.
 -   Plus, having redundant tests just increases performance overhead.
+
+## 6. MLOps
+-   MLflow is used to track experiments and log relevant metrics and artifacts. Since FLAML's AutoML is used to train the classifier, the best model is then entered into the model registry.
+-   Deployment is automated via loading the "Champion" model from the registry for inference.
+-   Model retraining is triggered at period intervals, but can also happen when performance drops beyond a set threshold.
+-   Monitoring of such drops in performance is facilitated by Grafana, which can also be set up to alert you when such situations occur.
 
 # Technologies Used
 ## 1. Docker Compose
@@ -108,8 +116,9 @@ If you want to run the pipeline on your own, here are some considerations:
 -   Also hosts Metabase metadata.
 
 ## 4. Airflow
--  ![Airflow DAG Graph](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/airflow_dag.png)
--   Tasks are parallelized for efficiency.
+-  ![Airflow UI](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/airflow.png)
+- ![Airflow DAG Graph](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/airflow_dag.png)  
+- Tasks are parallelized for efficiency.
 -   Use jinja scripting to pull XCom data into Postgres database.
 
 ## 5. dbt
@@ -138,3 +147,23 @@ If you want to run the pipeline on your own, here are some considerations:
 ## 8. GCP VM
 -   VM instance type determined via trial and error.
 -   Once again, be wary of port forwarding and general firewall settings.
+
+## 9. MLflow
+ - ![MLflow UI](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/mlflow.png)
+ - The MLflow server is hosted on the same container as airflow. This was to reduce the additional overhead caused by the need for inter-container communication if the need arose.
+ - [You can read more about it here](https://stackoverflow.com/questions/59035543/how-to-execute-command-from-one-docker-container-to-another). Your options are exposing the host socket (very dangerous), setting up SSH between the instances (cumbersome), or using a Flask extension and wrapping bash access around a REST API (long term support is questionable).
+ - The backend store is handled by the same postgres instance, while minIO handles object store.
+ - A custom FastAPI wrapper deals with deployment for flexibility with predict_proba, but one can use MLflow's native support for serving models via Flask, Seldon's ML Server, Kubernetes, or other cloud platforms.
+
+## 10. minIO
+ - ![minIO UI](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/minio.png)
+ - Acts as object store for MLflow artifacts
+ - Serves as a proxy for cloud native storage, think AWS S3 and its analogs
+ - A single bucket deals with MLflow output. However, it can be scaled to other use cases.
+
+## 11. Grafana
+ - ![Grafana dashboard](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/monitoring_dashboard.png)
+ - Connects with our Postgres instance to obtain modal metric data
+ - Alerts can be set at determined threshold for each metric
+ - Model inference latency and other operational metrics can be considered, especially in conjunction with Prometheus
+ - Dashboard layout as seen can be obtained from ```assets``` folder.
