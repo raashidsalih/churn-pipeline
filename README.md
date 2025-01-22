@@ -12,12 +12,16 @@ This project was developed to:
  - Be applied to a somewhat realistic business use case
  - Serve as a template for others to learn from and use via extensive documentation
 # What's Next?
- - ~~Model retraining pipelines with Experiment Tracking using MLflow~~
- - ~~Automated model deployment using MLflow Model Registry~~
- - ~~Monitoring using Evidently and Grafana~~
+ - Consider CI/CD setup with ECR and Jenkins.
+ - Integrate Prometheus to log operational metrics like model inference latency.
+ - Add DVC as a more comprehensive option compared to MLFlow's built-in solution.
+ - Look into including data drift and feature explainability as additional metrics. Explainabilty can be used to observe feature importance changes over time.
  - Implement unit and integration tests for Airflow functions.
  - Develop SCD2 functionality for dimension tables.
  - Evaluate feasibility of incremental refresh (models) via dbt to prevent overhead.
+ - ~~Model retraining pipelines with Experiment Tracking using MLflow~~
+ - ~~Automated model deployment using MLflow Model Registry~~
+ - ~~Monitoring using Evidently and Grafana~~
 
 ## Project Architecture
 
@@ -43,6 +47,7 @@ Almost all of the services above run in their own docker containers, as seen in 
 If you want to run the pipeline on your own, here are some considerations:
 
  - The Docker Compose file is the crux of this project, so that is a good starting point.
+ - If you are running into an error with regards to ```pip install``` during the Docker build phase, consider changing the mtu size in the Docker Daemon.
  - Rename sample.env to .env
  - Double check the ports for the various docker services if project is run locally. Ensure it doesn't conflict with ports used by other services on the system.
  - Add path to credentials file and locally generated SSH files in the [Terraform main file (main.tf)](https://github.com/raashidsalih/churn-pipeline/blob/main/terraform/main.tf).
@@ -95,7 +100,7 @@ If you want to run the pipeline on your own, here are some considerations:
 ## 6. MLOps
 -   MLflow is used to track experiments and log relevant metrics and artifacts. Since FLAML's AutoML is used to train the classifier, the best model is then entered into the model registry.
 -   Deployment is automated via loading the "Champion" model from the registry for inference.
--   Model retraining is triggered at period intervals, but can also happen when performance drops beyond a set threshold.
+-   Model retraining is triggered at period intervals, but can also happen when performance (model metrics, or data dsitribution changes) drops beyond a set threshold.
 -   Monitoring of such drops in performance is facilitated by Grafana, which can also be set up to alert you when such situations occur.
 
 # Technologies Used
