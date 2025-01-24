@@ -3,8 +3,11 @@
 An end to end analytics platform that models and visualizes customer churn. The project blends together concepts from data engineering, analytics engineering, and MLOps.
 
 ![Dashboard Preview](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/dashboard.png)
+<p align="center">Analytics Dashboard</p>
 
 ![Monitoring Dashboard](https://github.com/raashidsalih/churn-pipeline/blob/main/assets/monitoring_dashboard.png)
+<p align="center">ML Monitoring Dashboard</p>
+
 # Overview
 
 This project was developed to:
